@@ -97,7 +97,6 @@ test.group('Password', (group) => {
   test('it cannot reset password when token is expired after 2 hours', async (assert) => {
     const user = await UserFactory.create()
     const date = DateTime.now().minus(Duration.fromISOTime('02:01'))
-
     const { token } = await user.related('tokens').create({ token: 'token', createdAt: date })
     const { body } = await supertest(BASE_URL)
       .post('/reset-password')
@@ -112,7 +111,6 @@ test.group('Password', (group) => {
   group.beforeEach(async () => {
     await Database.beginGlobalTransaction()
   })
-
   group.afterEach(async () => {
     await Database.rollbackGlobalTransaction()
   })
