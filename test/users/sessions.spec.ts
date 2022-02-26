@@ -84,8 +84,6 @@ test.group('Session', (group) => {
 
     const apiToken = body.token
 
-    const tokenBeforeSignout = await Database.query().select('*').from('api_tokens')
-
     await supertest(BASE_URL)
       .delete('/sessions')
       .set('Authorization', `Bearer ${apiToken.token}`)
