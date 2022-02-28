@@ -111,6 +111,7 @@ test.group('Password', (group) => {
   group.beforeEach(async () => {
     await Database.beginGlobalTransaction()
   })
+
   group.afterEach(async () => {
     await Database.rollbackGlobalTransaction()
   })
