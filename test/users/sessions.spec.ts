@@ -88,6 +88,7 @@ test.group('Session', (group) => {
   group.beforeEach(async () => {
     await Database.beginGlobalTransaction()
   })
+
   group.afterEach(async () => {
     await Database.rollbackGlobalTransaction()
   })
