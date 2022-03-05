@@ -2,8 +2,10 @@ import Database from '@ioc:Adonis/Lucid/Database'
 import test from 'japa'
 import supertest from 'supertest'
 
-import User from 'App/Models/User'
 import { GroupFactory, UserFactory } from 'Database/factories'
+
+import User from 'App/Models/User'
+import GroupRequest from 'App/Models/GroupRequest'
 
 const BASE_URL = `http://${process.env.HOST}:${process.env.PORT}`
 
@@ -187,6 +189,57 @@ test.group('Group Request', (group) => {
 
     const { body } = await supertest(BASE_URL)
       .post(`/groups/${group.id}/requests/123/accept`)
+      .expect(404)
+
+    assert.exists(body.code, 'BAD_REQUEST')
+    assert.equal(body.status, 404)
+  })
+
+  test('it should reject a group request', async (assert) => {
+    const master = await UserFactory.create()
+    const group = await GroupFactory.merge({ master: master.id }).create()
+
+    const { body } = await supertest(BASE_URL)
+      .post(`/groups/${group.id}/requests`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({})
+
+    await supertest(BASE_URL)
+      .delete(`/groups/${group.id}/requests/${body.groupRequest.id}`)
+      .expect(200)
+
+    const groupRequest = await GroupRequest.find(body.groupRequest.id)
+    assert.isNull(groupRequest)
+  })
+
+  test('it should return 404 when providing an unexisting group for rejection', async (assert) => {
+    const master = await UserFactory.create()
+    const group = await GroupFactory.merge({ master: master.id }).create()
+
+    const { body } = await supertest(BASE_URL)
+      .post(`/groups/${group.id}/requests`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({})
+
+    const response = await supertest(BASE_URL)
+      .delete(`/groups/123/requests/${body.groupRequest.id}`)
+      .expect(404)
+
+    assert.exists(response.body.code, 'BAD_REQUEST')
+    assert.equal(response.body.status, 404)
+  })
+
+  test('it should return 404 when providing an unexisting group request for rejection', async (assert) => {
+    const master = await UserFactory.create()
+    const group = await GroupFactory.merge({ master: master.id }).create()
+
+    await supertest(BASE_URL)
+      .post(`/groups/${group.id}/requests`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({})
+
+    const { body } = await supertest(BASE_URL)
+      .delete(`/groups/${group.id}/requests/123`)
       .expect(404)
 
     assert.exists(body.code, 'BAD_REQUEST')
