@@ -44,7 +44,12 @@ const databaseConfig: DatabaseConfig = {
       },
       useNullAsDefault: true,
       healthCheck: false,
-      debug: false
+      debug: false,
+      pool: {
+        afterCreate: function (conn, cb) {
+          conn.run('PRAGMA foreign_keys=true', cb)
+        }
+      }
     }
   }
 }
