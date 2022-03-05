@@ -3,7 +3,7 @@ import test from 'japa'
 import supertest from 'supertest'
 
 import User from 'App/Models/User'
-import { UserFactory } from 'Database/factories'
+import { GroupFactory, UserFactory } from 'Database/factories'
 
 const BASE_URL = `http://${process.env.HOST}:${process.env.PORT}`
 
@@ -61,6 +61,37 @@ test.group('Group', (group) => {
 
     token = body.token.token
     user = newUser
+  })
+
+  test('it should update a group', async (assert) => {
+    const master = await UserFactory.create()
+    const group = await GroupFactory.merge({ master: master.id }).create()
+    const payload = {
+      name: 'test',
+      description: 'test',
+      schedule: 'test',
+      location: 'test',
+      chronic: 'test'
+    }
+
+    const { body } = await supertest(BASE_URL)
+      .patch(`/groups/${group.id}`)
+      .send(payload)
+      .expect(200)
+
+    assert.exists(body.group, 'Group undefined')
+    assert.equal(body.group.name, payload.name)
+    assert.equal(body.group.description, payload.description)
+    assert.equal(body.group.schedule, payload.schedule)
+    assert.equal(body.group.location, payload.location)
+    assert.equal(body.group.chronic, payload.chronic)
+  })
+
+  test.only('it should return 404 when providing an unexisting group for update', async (assert) => {
+    const { body } = await supertest(BASE_URL).patch('/groups/1').send({}).expect(404)
+
+    assert.equal(body.code, 'BAD_REQUEST')
+    assert.equal(body.status, 404)
   })
 
   group.after(async () => {
