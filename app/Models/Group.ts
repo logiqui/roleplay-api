@@ -5,10 +5,14 @@ import {
   BelongsTo,
   column,
   manyToMany,
-  ManyToMany
+  ManyToMany,
+  ModelQueryBuilderContract,
+  scope
 } from '@ioc:Adonis/Lucid/Orm'
 
 import User from './User'
+
+type Builder = ModelQueryBuilderContract<typeof Group>
 
 export default class Group extends BaseModel {
   @column({ isPrimary: true })
@@ -47,4 +51,14 @@ export default class Group extends BaseModel {
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   public updatedAt: DateTime
+
+  public static withPlayer = scope((query: Builder, userId: number) => {
+    query.whereHas('players', (query) => {
+      query.where('id', userId)
+    })
+  })
+
+  public static withText = scope((query: Builder, text: string) => {
+    query.where('name', 'LIKE', `%${text}%`).orWhere('description', 'LIKE', `%${text}%`)
+  })
 }
